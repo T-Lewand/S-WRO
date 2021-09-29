@@ -2,7 +2,7 @@
 Projekt SKN Gedetów
 
 ---
-Struktura
+Struktura:
 -Data
  -Raw_data
  -Clean_DataFrames
