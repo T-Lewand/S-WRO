@@ -26,8 +26,8 @@ class Dataset:
                 exit()
 
         for i in self.raw_files:
-            raw_data = pd.read_csv('{}{}'.format(self.raw_dir, i), sep='\t', header=None)
-            raw_data.columns = self.header[0:11]  # Tu będzie zmiana jak dojdą dane z akcelerometra i GPS
+            raw_data = pd.read_csv('{}{}'.format(self.raw_dir, i),
+                                   names=self.header, sep='\t')
             raw_data['data'] = raw_data['data'][0][2::]  # Sprząta '>>' przy datach
             if save:
                 raw_data.to_csv('{}{}'.format(self.clean_dir, i), sep=';', index=False)
@@ -54,5 +54,5 @@ class Dataset:
         fig, ax = plt.subplots()
 
         plot = ax.plot(data['godz'], data[parameter])
-
+        fig = plt.xticks(rotation=60)
         plt.show()
