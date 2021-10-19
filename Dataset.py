@@ -28,31 +28,37 @@ class Dataset:
         for i in self.raw_files:
             raw_data = pd.read_csv('{}{}'.format(self.raw_dir, i),
                                    names=self.header, sep='\t')
-            raw_data['data'] = raw_data['data'][0][2::]  # Sprząta '>>' przy datach
+            raw_data['date'] = raw_data['date'][0][2::]  # Sprząta '>>' przy datach
             if save:
                 raw_data.to_csv('{}{}'.format(self.clean_dir, i), sep=';', index=False)
 
         return raw_data
 
-    def read_data(self, date):
+    def read_data(self, date, rover):
         """
         Czyta dane w folderze Data\Clean
         :param date: Data dla której podczytuje dane w formie: YYYYMMDD
         :return: DataFrame
         """
-        self.clean_files = list_files(self.raw_dir, form='.txt')
+        self.clean_files = list_files(self.clean_dir, form='.txt')
         try:
-            clean_data = pd.read_csv('{}{}.txt'.format(self.clean_dir, date), sep=';')
+            clean_data = pd.read_csv('{}{}_{}.txt'.format(self.clean_dir, date, rover), sep=';')
         except:
             print("Brak danych dla podanej daty")
             exit()
 
         return clean_data
 
-    def visualize(self, date: int, parameter: str):  # In progress
+    def visualize(self, date, parameter: str):  # In progress
         data = self.read_data(date)
         fig, ax = plt.subplots()
+        if parameter == 'coord':
+            latitude = data['B']
+            longitude = data['L']
+            print(latitude), print(longitude)
+            plot = ax.scatter(longitude, latitude)
+        else:
+            plot = ax.plot(data['godz'], data[parameter])
 
-        plot = ax.plot(data['godz'], data[parameter])
         fig = plt.xticks(rotation=60)
         plt.show()
