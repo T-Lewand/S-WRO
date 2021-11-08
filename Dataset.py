@@ -49,8 +49,8 @@ class Dataset:
 
         return clean_data
 
-    def visualize(self, date, parameter: str):  # In progress
-        data = self.read_data(date)
+    def visualize(self, date, rover,  parameter: str):  # In progress
+        data = self.read_data(date, rover)
         fig, ax = plt.subplots()
         if parameter == 'coord':
             latitude = data['B']
@@ -58,7 +58,7 @@ class Dataset:
             print(latitude), print(longitude)
             plot = ax.scatter(longitude, latitude)
         else:
-            plot = ax.plot(data['godz'], data[parameter])
+            plot = ax.plot(data['time'], data[parameter])
 
         fig = plt.xticks(rotation=60)
         plt.show()
