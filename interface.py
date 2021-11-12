@@ -13,9 +13,11 @@ rover1 = Rover('1')
 rover2 = Rover('2')
 
 dataset = Dataset()
-dataset.visualize('20211006', '1', 'pmy1')
+
 rover1_data = dataset.read_data('20211006', '1')
-#rover2 = dataset.read_data('20211006', '2')
+print(rover1_data.dtypes)
+
+
 
 
 
