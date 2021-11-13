@@ -12,11 +12,8 @@ wroclaw_L = 17 + 1/60 + 57/60/60
 rover1 = Rover('1')
 rover2 = Rover('2')
 
-dataset = Dataset()
-
-rover1_data = dataset.read_data('20211006', '1')
-print(rover1_data.dtypes)
-
+lista = ['1','2']
+print(isinstance(lista, list))
 
 
 

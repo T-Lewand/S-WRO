@@ -9,6 +9,27 @@ class Dataset:
         with open('Data\\header.txt', 'r') as file:
             self.header = file.read().split(', ')
 
+    def get_dates(self, as_dict=False):
+        dates = [entry.split('.')[0] for entry in self.clean_files]
+        dates = [entry.split('_')[0] for entry in dates]
+        dates = set(dates)
+        dates = list(dates)
+
+        if as_dict:
+
+            string = []
+            for i in dates:
+                string.append('{}.{}.{}'.format(i[-2::], i[4:6], i[0:4]))
+
+            dates_dict = []
+            for i in range(len(dates)):
+                dates_dict.append(dict(label=string[i], value=dates[i]))
+
+            return dates_dict
+
+        else:
+            return dates
+
     def clean_raw(self, date: int = None, save: bool = True):
         """
         Czyści surowe dane i zapisuje je w ładnym DataFrame z nagłówkami w folderze Data\Clean
@@ -44,12 +65,20 @@ class Dataset:
         try:
             clean_data = pd.read_csv('{}{}_{}.txt'.format(self.clean_dir, date, rover), sep=';')
         except:
+            print('{}{}_{}.txt'.format(self.clean_dir, date, rover))
             print("Brak danych dla podanej daty")
             exit()
 
         return clean_data
 
     def visualize(self, date, rover,  parameter: str):  # In progress
+        """
+        Funkcja w trakcie tworzenia
+        :param date: data danych dla których tworzony będzie wykres
+        :param rover: numer rowera
+        :param parameter: parametr, który ma być na wykresie
+        :return:
+        """
         data = self.read_data(date, rover)
         fig, ax = plt.subplots()
         if parameter == 'coord':
