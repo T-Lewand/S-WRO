@@ -2,6 +2,10 @@ from utilities import *
 
 class Rover():
     def __init__(self, name):
+        """
+        Tworzy obiekt Rover
+        :param name: numer rowera
+        """
         self.rover = name
         self.data_dir = 'Data\\Clean\\'
         data_files = list_files(self.data_dir)
@@ -24,8 +28,12 @@ class Rover():
 
         return data
 
-
     def path(self, date):
+        """
+        Zwraca listę par współrzędnych punktów, dla których zebrano dane.
+        :param date: data danych
+        :return: lista par współrzędnych
+        """
         data = self.read_data(date)
         path = zip(data['B'], data['L'])
 
