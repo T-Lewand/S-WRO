@@ -1,8 +1,5 @@
 import os
-import pandas as pd
-from matplotlib import pyplot as plt
-import datetime
-
+import numpy as np
 
 def list_files(data_directory: str, form: str = None):
     """
