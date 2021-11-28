@@ -1,1 +1,1 @@
-date, doy, time, temp, pressure, humidity, pmy1, pmy2, pmy3, pmy4, pmy5, X, Y, Z, B, L
+Time, Latitude, Longitute, Height, Pm1.0, Pm2.5, Pm10,  HCHO, Temperature, RH, aX, aY, aZ
