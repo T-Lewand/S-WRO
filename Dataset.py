@@ -33,6 +33,11 @@ class Dataset:
         return dates_dict
 
     def read_raw(self, raw_file):
+        """
+        Reads raw files into DataFrame.
+        :param raw_file: directory of single file
+        :return: dataframe of uncleaned data
+        """
         raw_data = pd.read_csv('{}{}'.format(self.raw_dir, raw_file),
                                 names=self.header, sep='\t', true_values=['>']).reset_index()
         return raw_data
@@ -86,20 +91,55 @@ class Dataset:
                 day_log.to_csv('{}{}.txt'.format(self.clean_dir, j), sep=';', index=False)
 
     def read_all(self, date):
+        """
+        Reads clean data file
+        :param date: date of data to read
+        :return:
+        """
         data = pd.read_csv('{}\\{}.txt'.format(self.clean_dir, date), sep=';')
         return data
 
-    def read(self, date, selection='main'):
+    def read(self, date, selection='main', start_time=None, end_time=None):
+        """
+        Reads clean data into dataframe
+        :param date: date of data to read
+        :param selection: type of data to read. 'main' reads only full entries, 'accel' read only accelerations
+        :param start_time: starting time for data selection in format HH:MM:SS
+        :param end_time: end time for data selection in format HH:MM:SS
+        :return: dataframe
+        """
+
         data = self.read_all(date)
+        if start_time is None:
+            start_time = data['Time'][0]
+        else:
+            start_time = "{}-{}-{} {}".format(date[0:4], date[4:6], date[6:], start_time)
+        start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+        delta = 0
+        if end_time is None:
+            delta = 1
+            end_time = data.iloc[-1, 1][0:-7]
+        else:
+            end_time = "{}-{}-{} {}".format(date[0:4], date[4:6], date[6:], end_time)
+
+        end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S') + timedelta(seconds=delta)
+
         nans = pd.isna(data['index'])
         second_index = data.index[~nans]
-        entry_index = data.index[nans]
+
         if selection == 'main':
             data = data.iloc[second_index]
             for i in range(data.shape[0]):
-                data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S') # 1 its Time
+                data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S')
         elif selection == 'accel':
             data = data.loc[:, ['index', 'Time', 'aX', 'aY', 'aZ']]
+            for i in range(data.shape[0]):
+                try:
+                    data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S')
+                except:
+                    data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S.%f')
+
+        data = data[(data["Time"] > start_time) & (data["Time"] < end_time)]
         return data
 
     def visualize(self, date,  parameters=None, start=0, stop=None):  # In progress
