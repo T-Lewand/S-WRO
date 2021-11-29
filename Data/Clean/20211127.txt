@@ -1,4 +1,4 @@
-index;Time;Latitude;Longitute;Height;Pm1.0;Pm2.5;Pm10; HCHO;Temperature;RH;aX;aY;aZ
+index;Time;Latitude;Longitute;Height;Pm1.0;Pm2.5;Pm10;HCHO;Temperature;RH;aX;aY;aZ
 True;2021-11-27 10:25:33;51.110975;17.063092;25.8;23.0;41.0;58.0;0.0;11.2;41.0;-0.70629;-0.577;9.25838
 ;2021-11-27 10:25:33;;;;;;;;;;-0.7015;-0.58658;9.26317
 ;2021-11-27 10:25:33.040000;;;;;;;;;;-0.70629;-0.5937600000000001;9.25119
