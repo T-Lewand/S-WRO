@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from utilities import *
 
+
 class Dataset:
     def __init__(self):
         self.raw_dir = 'Data\\Raw\\'
@@ -39,8 +40,25 @@ class Dataset:
         :return: dataframe of uncleaned data
         """
         raw_data = pd.read_csv('{}{}'.format(self.raw_dir, raw_file),
-                                names=self.header, sep='\t', true_values=['>']).reset_index()
+                               names=self.header, sep='\t', true_values=['>']).reset_index()
         return raw_data
+
+    def pm_correction(self, raw_pm, humidity, pm_parameter: str):
+        """
+        Corrects pm values due to humidity
+        :param raw_pm: Series of raw Pm values
+        :param humidity: Series of humidity
+        :param pm_parameter: Name of Pm for correction. 'Pm2.5' and 'Pm10' supported
+        :return: Series of corrected Pm 10
+        """
+        if '2.5' in pm_parameter:
+            A, B, C = 1.00123, 1.96141, 1
+        elif '10' in pm_parameter:
+            A, B, C = 1.15866, 3.16930, 0.7
+
+        factor = C + A * (humidity.values/100)**B
+        pm_corrected = raw_pm/factor
+        return pd.Series(pm_corrected)
 
     def clean_raw(self, date: int = None, save: bool = True):
         """
@@ -87,6 +105,42 @@ class Dataset:
 
 
             day_log = day_log.iloc[1:]
+            day_log.reset_index(inplace=True)
+
+            # recalculating Pm 2.5 and Pm 10
+            nans = pd.isna(day_log['index'])
+            second_index2 = day_log.index[~nans]
+
+            day_log.loc[second_index2, 'Pm2.5'] = self.pm_correction(day_log.loc[second_index2, 'Pm2.5'],
+                                                                       day_log.loc[second_index2, 'RH'], 'Pm2.5')
+            day_log.loc[second_index2, 'Pm10'] = self.pm_correction(day_log.loc[second_index2, 'Pm10'],
+                                                                      day_log.loc[second_index2, 'RH'], 'Pm10')
+
+            # Getting location to acceleration only entries
+            print(day_log.columns.to_list())
+            print(second_index2)
+            latitudes = day_log.loc[second_index2, 'Latitude']
+            longitudes = day_log.loc[second_index2, 'Longitude']
+            d_lat, d_lon, d_step = [], [], []
+
+            # for i in range(len(second_index2)-1):
+            #     d_lat.append(latitudes.iloc[i+1]-latitudes.iloc[i])
+            #     d_lon.append(longitudes.iloc[i+1]-longitudes.iloc[i])
+            #     d_step.append(second_index2.values[i+1]-second_index2.values[i]-1)
+            #
+            # indexer = 0
+            # for i in range(day_log.shape[0]-1):
+            #     if i in second_index2.values:
+            #         lat_step = d_lat[indexer] / d_step[indexer]
+            #         lon_step = d_lon[indexer] / d_step[indexer]
+            #         indexer += 1
+            #         lat_0 = day_log.loc[i, 'Latitude']
+            #         lon_0 = day_log.loc[i, 'Longitude']
+            #         continue
+            #
+            #     day_log.loc[i, 'Latitude'] = lat_0 + lat_step * i
+            #     day_log.loc[i, 'Longitude'] = lon_0 + lon_step * i
+
             if save:
                 day_log.to_csv('{}{}.txt'.format(self.clean_dir, j), sep=';', index=False)
 
@@ -96,7 +150,7 @@ class Dataset:
         :param date: date of data to read
         :return:
         """
-        data = pd.read_csv('{}\\{}.txt'.format(self.clean_dir, date), sep=';')
+        data = pd.read_csv('{}\\{}.txt'.format(self.clean_dir, date), sep=';').drop(columns=['level_0'])
         return data
 
     def read(self, date, selection='main', start_time=None, end_time=None):
@@ -118,10 +172,11 @@ class Dataset:
         delta = 0
         if end_time is None:
             delta = 1
-            end_time = data.iloc[-1, 1][0:-7]
+            end_time = data.iloc[-1, 1]
+            if '.' in end_time:
+                end_time = end_time[0:-7]
         else:
             end_time = "{}-{}-{} {}".format(date[0:4], date[4:6], date[6:], end_time)
-
         end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S') + timedelta(seconds=delta)
 
         nans = pd.isna(data['index'])
@@ -142,6 +197,25 @@ class Dataset:
         data = data[(data["Time"] > start_time) & (data["Time"] < end_time)]
         return data
 
+    def outliner(self, data, scale):
+        """
+        Removes outline values
+        :param data: Series
+        :param scale: scale to increase tresholds
+        :return: Series
+        """
+        median = data.quantile(.5)
+        q1 = data.quantile(.25)
+        q3 = data.quantile(.75)
+        iqr = q3 - q1
+        low_treshold = median - scale*iqr
+        high_treshold = median + scale*iqr
+
+        data = data[(data > low_treshold) & (data < high_treshold)]
+
+        return data
+
+
     def visualize(self, date,  parameters=None, start=0, stop=None):  # In progress
         all = self.read(date=date)
         if parameters is None:
@@ -156,7 +230,7 @@ class Dataset:
 
         all = all[(all["Time"] > start)]
         all = all[(all["Time"] < stop)]
-        exit()
+
         fig, ax = plt.subplots(nrows=len(parameters), ncols=1)
 
         for i in range(len(parameters)):
@@ -171,3 +245,22 @@ class Dataset:
             sns.lineplot(data=param, x='Time', y=parameters[i])
 
         plt.show()
+
+    def data_center(self, data=None, date=None):
+        """
+        Calculates geographical coordinates of center of dataset
+        :param data: DataFrame of selected data. If not provided data is read and date is required
+        :param date: date of data. Not required if data is provided
+        :return: list [lat_center, lon_center]
+        """
+        if data is None:
+            data = self.read(date)
+
+        max_lat = max(data['Latitude'])
+        min_lat = min(data['Latitude'])
+        max_lon = max(data['Longitude'])
+        min_lon = min(data['Longitude'])
+
+        center = [(max_lat+min_lat)/2, (max_lon+min_lon)/2]
+
+        return center
