@@ -10,8 +10,9 @@ dataset = Dataset()
 
 date = '20211118'
 date2 = '20211127'
-
-dataset.visualize(date2)
+date3 = '20211209'
+date4 = '20211213'
+dataset.clean_raw(date4)
 #print(data.head())
 
 
