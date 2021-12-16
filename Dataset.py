@@ -88,7 +88,7 @@ class Dataset:
                 second_index = raw_data.index[~nans]
                 entry_index = raw_data.index[nans]
 
-                raw_data.iloc[entry_index] = raw_data.iloc[entry_index].shift(axis=1)
+                #raw_data.iloc[entry_index] = raw_data.iloc[entry_index].shift(axis=1)
 
                 for i in second_index:
                     raw_data.iloc[i, 1] = datetime.strptime("{} {}".format(day, raw_data.iloc[i, 1]),
@@ -119,9 +119,9 @@ class Dataset:
             # Getting location to acceleration only entries
             print(day_log.columns.to_list())
             print(second_index2)
-            latitudes = day_log.loc[second_index2, 'Latitude']
-            longitudes = day_log.loc[second_index2, 'Longitude']
-            d_lat, d_lon, d_step = [], [], []
+            # latitudes = day_log.loc[second_index2, 'Latitude']
+            # longitudes = day_log.loc[second_index2, 'Longitude']
+            # d_lat, d_lon, d_step = [], [], []
 
             # for i in range(len(second_index2)-1):
             #     d_lat.append(latitudes.iloc[i+1]-latitudes.iloc[i])
@@ -217,9 +217,10 @@ class Dataset:
 
 
     def visualize(self, date,  parameters=None, start=0, stop=None):  # In progress
+        import matplotlib.ticker as ticker
         all = self.read(date=date)
         if parameters is None:
-            parameters = self.header[4:]
+            parameters = self.header[-3:-2]
         if start == 0:
             start = all.iloc[0, 1]
 
@@ -230,8 +231,8 @@ class Dataset:
 
         all = all[(all["Time"] > start)]
         all = all[(all["Time"] < stop)]
-
-        fig, ax = plt.subplots(nrows=len(parameters), ncols=1)
+        sns.set_style("whitegrid")
+        fig, ax = plt.subplots(nrows=len(parameters), ncols=1, figsize=(15, 9))
 
         for i in range(len(parameters)):
             print(parameters[i])
@@ -241,10 +242,17 @@ class Dataset:
                 param.iloc[j, 0] = param.iloc[j, 0].time()
                 param.iloc[j, 0] = param.iloc[j, 0].strftime("%H:%M:%S")
 
-            plt.sca(ax[i])
+            axes = ax
+            plt.sca(axes)
             sns.lineplot(data=param, x='Time', y=parameters[i])
+            axes.xaxis.set_major_locator(ticker.AutoLocator())
+            axes.locator_params(nbins=30, axis='x')
+            plt.xticks(rotation=90)
+            plt.tight_layout()
+            plt.subplots_adjust(wspace=0.37, hspace=0.40, top=0.90, bottom=0.2)
 
-        plt.show()
+        plt.savefig('aX.tiff', dpi=200)
+        #plt.show()
 
     def data_center(self, data=None, date=None):
         """
