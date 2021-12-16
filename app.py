@@ -41,24 +41,22 @@ graphs_id2 = [3, 4, 5]
 app.layout = html.Div(children=[
     dcc.Store(id='data-holder-full'),
     dcc.Store(id='data-holder-slice'),
-    html.H1(children='Sensorowo-roWeRowO'),
-
-    html.Div(children=[dcc.Dropdown(id='date_selector', options=dates)]),
-    html.Br(),
-
-    html.Div(children=[dcc.Graph(id='map', figure={}, style={'height': 600}),
-                       html.Br(),
-                       dcc.Dropdown(id='dropdown-data-map', options=parameters_dict, value=parameters_dict[0]['value'],
-                                    style={'width': "50%", 'display': 'inline-block'}),
-                       dcc.Dropdown(id='dropdown-map-style', options=[{'label': 'Hex', 'value': 'Hex'},
+    html.Div(children=
+    html.Img(src="/assets/images/logo.png", className="header-logo-img")),
+    html.Div(children=[
+                    html.Div(children=[dcc.Dropdown(id='date_selector', options=dates, className="date-selector")]),
+                    html.Div(children=[dcc.Dropdown(id='dropdown-data-map', options=parameters_dict,               value=parameters_dict[0]['value'], className="date-selector")]),
+                    html.Div(children=[dcc.Dropdown(id='dropdown-map-style', 
+                                                            options=[{'label': 'Hex', 'value': 'Hex'},
                                                                       {'label': 'Heat map', 'value': 'Heatmap'}],
-                                    value='Hex',
-                                    style={'width': "50%", 'display': 'inline-block'}),
-                       dcc.Checklist(id='display-path', options=[{'label': 'Trasa', 'value': 0}],
+                                                            value='Hex',
+                                                            className="date-selector")]),
+                    html.Div(children=[dcc.Input(id='size', type='number', placeholder='Element size', value=20,
+                                 className="hex-number")]),
+                    dcc.Graph(id='map', figure={}, style={'height': 600}),
+
+                    dcc.Checklist(id='display-path', options=[{'label': 'Trasa', 'value': 0}],
                                      style={'width': "50%", 'display': 'inline-block'}),
-                       dcc.Input(id='size', type='number', placeholder='Element size', value=20,
-                                 style={'width': "25%", 'display': 'inline-block'})],
-             style={'height': 680}),
     html.Br(),
     html.Div(children=[
     dcc.RangeSlider(id='time-selector', min=0, max=23.999, step=1/60, value=[0, 23.999],
@@ -78,7 +76,17 @@ app.layout = html.Div(children=[
              style={'width':"50%", 'display': 'inline-block'}),
     html.Div(children=[dcc.Graph(id={'type': 'graph', 'index': i}, figure={}) for i in graphs_id2],
              style={'width':"50%", 'display': 'inline-block'})
-])
+], className="without-header"),
+    html.Div([
+        "Created by Sensorowo-rowerowo          ",
+        html.A([html.Img(src="/assets/images/icon-facebook.svg", )],
+               href="https://www.facebook.com/SKNGeodetow", className="info-contact-social"),
+        html.A([html.Img(src="/assets/images/icon-instagram.svg", )],
+                href="https://www.instagram.com/skn_geodetow_upwr", className="info-contact-social")],
+    className="info-contact")])
+
+
+
 @app.callback(
     Output(component_id='data-holder-full', component_property='data'),
     Input(component_id='date_selector', component_property='value'),
