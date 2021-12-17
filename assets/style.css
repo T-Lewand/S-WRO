@@ -20,6 +20,14 @@ body {
     margin-bottom: 0px;
     }
 
+.header-logo-img2 {
+    height: 250px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0px;
+    }
+
 .without-header {
     width:70%;
 
@@ -63,19 +71,94 @@ body {
   }
 
 .date-selector {
-    width: 40%;
-    padding-left: 100px;
-    margin-top: 5px;
-    align-items: center;
-    margin-bottom: 5px;
-    display: flex;
-}
-
-.hex-number {
-    width: 20%;
-    padding-left: 140px;
+    letter-spacing: 1px;
+    width: 250px;
+    line-height: 2.0;
+    padding-left: 30px;
+    padding-bottom: 15px;
     margin-top: 5px;
     align-items: center;
     margin-bottom: 15px;
-    margin-left: 100px;
+}
+
+.hex-number {
+    width: 10px;
+    letter-spacing: 1px;
+    padding-left: 50px;
+    align-items: center;
+    line-height: 2.0;
+    margin-top: 5px;
+    align-items: center;
+    margin-bottom: 15px;
+    margin-left: 30px;
+}
+
+.checklist {
+    display: flex;
+    letter-spacing: 1px;
+    width: 150px;
+    padding-left: 30px;
+    padding-bottom: 10px;
+    margin-top: 30px;
+    align-items: center;
+    margin-bottom: 10px;  
+}
+
+.range-slider {
+    margin-top: 20px;
+}
+
+.text-area {
+    align-items: center;
+    width: 50%;
+    padding-left: 30px;
+}
+
+.text-area-a {
+    align-items: center;
+    width: 100px;
+    margin-bottom: 30px;  
+    margin-top: 30px;
+}
+
+.show-button {
+    width: 120px;
+    border-radius: 3px;
+    margin: 10px;
+    margin-left: 46%;
+    font-size: 15px;
+    border: 2px solid #4CAF50;
+    transition-duration: 0.4s;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+.show-button:hover {
+    background-color: #3e7740; /* Green */
+    color: white;
+  }
+
+.pick-data {
+    letter-spacing: 1px;
+    width: 700px;
+    line-height: 2.0;
+    padding-left: 300px;
+    padding-right: 170px;
+    padding-bottom: 15px;
+    margin-top: 5px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.pick-data2 {
+    letter-spacing: 1px;
+    width: 500px;
+    line-height: 2.0;
+    padding-left: 0px;
+    padding-right: 280px;
+    padding-bottom: 15px;
+    margin-top: 5px;
+    align-items: center;
+    margin-bottom: 15px;
 }

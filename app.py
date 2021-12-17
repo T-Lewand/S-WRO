@@ -44,33 +44,37 @@ app.layout = html.Div(children=[
     html.Div(children=
     html.Img(src="/assets/images/logo.png", className="header-logo-img")),
     html.Div(children=[
-                    html.Div(children=[dcc.Dropdown(id='date_selector', options=dates, className="date-selector")]),
-                    html.Div(children=[dcc.Dropdown(id='dropdown-data-map', options=parameters_dict,               value=parameters_dict[0]['value'], className="date-selector")]),
-                    html.Div(children=[dcc.Dropdown(id='dropdown-map-style', 
+        html.Tr([
+                    html.Td(["Wybierz datę:", dcc.Dropdown(id='date_selector', options=dates)], className="date-selector"),
+                    html.Td(["Wybierz parametr:", dcc.Dropdown(id='dropdown-data-map', options=parameters_dict,              value=parameters_dict[0]['value'])], className="date-selector"),
+
+                    html.Td(["Wybierz sposób wyświetlania:", dcc.Dropdown(id='dropdown-map-style', 
                                                             options=[{'label': 'Hex', 'value': 'Hex'},
                                                                       {'label': 'Heat map', 'value': 'Heatmap'}],
-                                                            value='Hex',
-                                                            className="date-selector")]),
-                    html.Div(children=[dcc.Input(id='size', type='number', placeholder='Element size', value=20,
-                                 className="hex-number")]),
-                    dcc.Graph(id='map', figure={}, style={'height': 600}),
+                                                            value='Hex')],
+                                                            className="date-selector"),
 
-                    dcc.Checklist(id='display-path', options=[{'label': 'Trasa', 'value': 0}],
-                                     style={'width': "50%", 'display': 'inline-block'}),
-    html.Br(),
+                    html.Td(["Ilość HEX     :", dcc.Input(id='size', type='number', placeholder='Element size', value=20)], className="hex-number"),
+                    html.Td(["Pokaż trasę:", dcc.Checklist(id='display-path', options=[{'label': '', 'value': 0}])], className="checklist")]),
+
+                    dcc.Graph(id='map', figure={}, style={'height': 550}),
+
     html.Div(children=[
+
+    html.Div(
+        html.Tr([
+                html.Td(dcc.Textarea(id='start-time', value='00:00:00'), className="text-area"),
+                html.Td(dcc.Textarea(id='stop-time', value='24:00:00'), className="text-area")]), className="text-area-a"),
     dcc.RangeSlider(id='time-selector', min=0, max=23.999, step=1/60, value=[0, 23.999],
-                    allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False}),
-    dcc.Textarea(id='start-time', value='00:00:00'),
-    dcc.Textarea(id='stop-time', value='24:00:00')]),
-    html.Br(),
-    html.Div(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
-                                    value=parameters_dict[i]['value']) for i in graphs_id1],
-             style={'width': "50%", 'display': 'inline-block'}),
-    html.Div(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
-                                    value=parameters_dict[i]['value']) for i in graphs_id2],
-             style={'width':"50%", 'display': 'inline-block'}),
-    html.Button("Pokaż", id="update_butt", n_clicks=None),
+                    allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False}, className="range-slider"),       
+        ]),
+
+    html.Tr([
+        html.Td(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
+                                    value=parameters_dict[i]['value'], className="pick-data") for i in graphs_id1]),
+        html.Td(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
+                                    value=parameters_dict[i]['value'], className="pick-data2") for i in graphs_id2])]),
+    html.Button("Pokaż", id="update_butt", n_clicks=None, className="show-button"),
     html.Br(),
     html.Div(children=[dcc.Graph(id={'type': 'graph', 'index': i}, figure={}) for i in graphs_id1],
              style={'width':"50%", 'display': 'inline-block'}),
@@ -82,7 +86,8 @@ app.layout = html.Div(children=[
         html.A([html.Img(src="/assets/images/icon-facebook.svg", )],
                href="https://www.facebook.com/SKNGeodetow", className="info-contact-social"),
         html.A([html.Img(src="/assets/images/icon-instagram.svg", )],
-                href="https://www.instagram.com/skn_geodetow_upwr", className="info-contact-social")],
+                href="https://www.instagram.com/skn_geodetow_upwr", className="info-contact-social"),
+        html.Img(src="/assets/images/logoSKN_2020.png", className="info-contact-social")],
     className="info-contact")])
 
 
