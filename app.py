@@ -38,6 +38,7 @@ graphs_id2 = [3, 4, 5]
 # -------------------------------------------
 # id={'type': 'dynamic-dropdown', 'index': i}
 #    {'type': 'graph', 'index': i}
+app.title = 'S-WRO'
 app.layout = html.Div(children=[
     dcc.Store(id='data-holder-full'),
     dcc.Store(id='data-holder-slice'),
@@ -45,7 +46,7 @@ app.layout = html.Div(children=[
     html.Img(src="/assets/images/logo.png", className="header-logo-img")),
     html.Div(children=[
         html.Tr([
-                    html.Td(["Wybierz datę:", dcc.Dropdown(id='date_selector', options=dates)], className="date-selector"),
+                    html.Td(["Wybierz datę:", dcc.Dropdown(id='date_selector', options=dates, value=dates[1])], className="date-selector"),
                     html.Td(["Wybierz parametr:", dcc.Dropdown(id='dropdown-data-map', options=parameters_dict,              value=parameters_dict[0]['value'])], className="date-selector"),
 
                     html.Td(["Wybierz sposób wyświetlania:", dcc.Dropdown(id='dropdown-map-style', 
@@ -66,7 +67,7 @@ app.layout = html.Div(children=[
                 html.Td(dcc.Textarea(id='start-time', value='00:00:00'), className="text-area"),
                 html.Td(dcc.Textarea(id='stop-time', value='24:00:00'), className="text-area")]), className="text-area-a"),
     dcc.RangeSlider(id='time-selector', min=0, max=23.999, step=1/60, value=[0, 23.999],
-                    allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False}, className="range-slider"),       
+                    allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False}, className="range-slider", marks = {str(h) : str(h) for h in range(0, 24)}),       
         ]),
 
     html.Tr([

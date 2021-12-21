@@ -71,7 +71,7 @@ class Dataset:
             file = self.dates
         else:
             try:
-                file = ['{}'.format(date)]
+                file = ['{}_3'.format(date)]
             except:
                 print("Brak danych dla podanej daty")
                 exit()
