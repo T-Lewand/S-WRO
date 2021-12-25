@@ -24,20 +24,18 @@ app = dash.Dash(__name__)
 dataset = Dataset()
 
 dates = dataset.get_dates()
-#data = dataset.read('20211127', 'main')
-
 parameters_dict = [{'label': 'Temperatura', 'value': 'Temperature'},
-                    {'label': 'Wilgotność', 'value': 'RH'},
-                    {'label': 'Pm 1.0', 'value': 'Pm1.0'},
-                    {'label': 'Pm 2.5', 'value': 'Pm2.5'},
-                    {'label': 'Pm 10', 'value': 'Pm10'},
-                    {'label': 'Formaldehyd', 'value': 'HCHO'}]
-graphs_id = [0, 1, 2, 3, 4, 5]
-graphs_id1 = [0, 1, 2]
-graphs_id2 = [3, 4, 5]
+                   {'label': 'Wilgotność', 'value': 'RH'},
+                   {'label': 'Pm 1.0', 'value': 'Pm1.0'},
+                   {'label': 'Pm 2.5', 'value': 'Pm2.5'},
+                   {'label': 'Pm 10', 'value': 'Pm10'},
+                   {'label': 'Formaldehyd', 'value': 'HCHO'},
+                   {'label': 'Os X', 'value': 'd_aX'},
+                   {'label': 'Os Y', 'value': 'd_aY'},
+                   {'label': 'Os Z', 'value': 'd_aZ'}]
+
 # -------------------------------------------
-# id={'type': 'dynamic-dropdown', 'index': i}
-#    {'type': 'graph', 'index': i}
+
 app.title = 'S-WRO'
 app.layout = html.Div(children=[
     dcc.Store(id='data-holder-full'),
@@ -45,43 +43,46 @@ app.layout = html.Div(children=[
     html.Div(children=
     html.Img(src="/assets/images/logo.png", className="header-logo-img")),
     html.Div(children=[
+        html.Tr(
+                html.Td(["Opcja:", dcc.RadioItems(id='data-type', options=[{'label': 'Podstawowe', 'value': 'main'},
+                                                                           {'label': 'Akcel', 'value': 'accel'}],
+                                                  value='main')], className="radio")),
         html.Tr([
-                    html.Td(["Wybierz datę:", dcc.Dropdown(id='date_selector', options=dates, value=dates[1])], className="date-selector"),
-                    html.Td(["Wybierz parametr:", dcc.Dropdown(id='dropdown-data-map', options=parameters_dict,              value=parameters_dict[0]['value'])], className="date-selector"),
+                html.Td(["Wybierz datę:", dcc.Dropdown(id='date_selector', options=dates, value=dates[-1]['value'])],
+                        className="date-selector"),
+                html.Td(["Wybierz parametr:", dcc.Dropdown(id='dropdown-data-map')],
+                        className="date-selector"),
 
-                    html.Td(["Wybierz sposób wyświetlania:", dcc.Dropdown(id='dropdown-map-style', 
-                                                            options=[{'label': 'Hex', 'value': 'Hex'},
-                                                                      {'label': 'Heat map', 'value': 'Heatmap'}],
-                                                            value='Hex')],
-                                                            className="date-selector"),
+                html.Td(["Wybierz sposób wyświetlania:", dcc.Dropdown(id='dropdown-map-style',
+                                                                      options=[{'label': 'Hex', 'value': 'Hex'},
+                                                                               {'label': 'Heat map', 'value': 'Heatmap'}],
+                                                                      value='Hex')],
+                        className="date-selector"),
 
-                    html.Td(["Ilość HEX     :", dcc.Input(id='size', type='number', placeholder='Element size', value=20)], className="hex-number"),
-                    html.Td(["Pokaż trasę:", dcc.Checklist(id='display-path', options=[{'label': '', 'value': 0}])], className="checklist")]),
+                html.Td(["Ilość HEX     :", dcc.Input(id='size', type='number', placeholder='Element size', value=20)],
+                        className="hex-number"),
+                html.Td(["Pokaż trasę:", dcc.Checklist(id='display-path', options=[{'label': '', 'value': 0}])],
+                        className="checklist")]),
 
-                    dcc.Graph(id='map', figure={}, style={'height': 550}),
+        dcc.Graph(id='map', figure={}, style={'height': 550}),
 
+        html.Div(children=[
+            html.Div(
+                html.Tr([
+                    html.Td(dcc.Textarea(id='start-time', value='00:00:00'), className="text-area"),
+                    html.Td(dcc.Textarea(id='stop-time', value='24:00:00'), className="text-area")]),
+                className="text-area-a"),
+            dcc.RangeSlider(id='time-selector', min=0, max=23.999, step=1/60, value=[0, 23.999],
+                            allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False},
+                            className="range-slider",
+                            marks={str(h): str(h) for h in range(0, 24)}),
+            ]),
     html.Div(children=[
+        html.Button("+", id="add-button", n_clicks=None, className="show-button"),
+        html.Div(id='graph-container', children=[]),
+    ])]
+    , className='without-header'),
 
-    html.Div(
-        html.Tr([
-                html.Td(dcc.Textarea(id='start-time', value='00:00:00'), className="text-area"),
-                html.Td(dcc.Textarea(id='stop-time', value='24:00:00'), className="text-area")]), className="text-area-a"),
-    dcc.RangeSlider(id='time-selector', min=0, max=23.999, step=1/60, value=[0, 23.999],
-                    allowCross=False, tooltip={'placement': 'bottom', 'always_visible': False}, className="range-slider", marks = {str(h) : str(h) for h in range(0, 24)}),       
-        ]),
-
-    html.Tr([
-        html.Td(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
-                                    value=parameters_dict[i]['value'], className="pick-data") for i in graphs_id1]),
-        html.Td(children=[dcc.Dropdown(id={'type': 'dropdown-data', 'index': i}, options=parameters_dict,
-                                    value=parameters_dict[i]['value'], className="pick-data2") for i in graphs_id2])]),
-    html.Button("Pokaż", id="update_butt", n_clicks=None, className="show-button"),
-    html.Br(),
-    html.Div(children=[dcc.Graph(id={'type': 'graph', 'index': i}, figure={}) for i in graphs_id1],
-             style={'width':"50%", 'display': 'inline-block'}),
-    html.Div(children=[dcc.Graph(id={'type': 'graph', 'index': i}, figure={}) for i in graphs_id2],
-             style={'width':"50%", 'display': 'inline-block'})
-], className="without-header"),
     html.Div([
         "Created by Sensorowo-rowerowo          ",
         html.A([html.Img(src="/assets/images/icon-facebook.svg", )],
@@ -91,16 +92,46 @@ app.layout = html.Div(children=[
         html.Img(src="/assets/images/logoSKN_2020.png", className="info-contact-social")],
     className="info-contact")])
 
+@app.callback(
+    Output(component_id='dropdown-data-map', component_property='options'),
+    Output(component_id='dropdown-data-map', component_property='value'),
+    Input(component_id='data-type', component_property='value')
+)
+def setup(type):
+    """
+    Data type setup
+    """
+    if type == 'main':
+        parameters_dict = [{'label': 'Temperatura', 'value': 'Temperature'},
+                           {'label': 'Wilgotność', 'value': 'RH'},
+                           {'label': 'Pm 1.0', 'value': 'Pm1.0'},
+                           {'label': 'Pm 2.5', 'value': 'Pm2.5'},
+                           {'label': 'Pm 10', 'value': 'Pm10'},
+                           {'label': 'Formaldehyd', 'value': 'HCHO'},
+                           {'label': 'Os X', 'value': 'd_aX'},
+                           {'label': 'Os Y', 'value': 'd_aY'},
+                           {'label': 'Os Z', 'value': 'd_aZ'}]
 
+    elif type == 'accel':
+        parameters_dict = [{'label': 'Os X', 'value': 'd_aX'},
+                           {'label': 'Os Y', 'value': 'd_aY'},
+                           {'label': 'Os Z', 'value': 'd_aZ'}]
+
+    default = parameters_dict[0]['value']
+    return parameters_dict, default
 
 @app.callback(
     Output(component_id='data-holder-full', component_property='data'),
     Input(component_id='date_selector', component_property='value'),
+    Input(component_id='data-type', component_property='value')
 )
-def load_data(date):
+def load_data(date, type):
+    """
+    Data loader to page
+    """
     if date is None:
         raise PreventUpdate
-    data = dataset.read(date)
+    data = dataset.read(date, type)
     data_json = data.to_json()
     return data_json
 
@@ -113,6 +144,9 @@ def load_data(date):
     Input(component_id='data-holder-full', component_property='data')
 )
 def slice_data(time, date, data):
+    """
+    Data slicing due time selection
+    """
     if date is None:
         raise PreventUpdate
     while data is None:
@@ -128,15 +162,44 @@ def slice_data(time, date, data):
     stop_string = "Stop: {}".format(str(stop)[11:])
     return data, start_string, stop_string
 
+@app.callback(
+    Output(component_id='graph-container', component_property='children'),
+    Input(component_id="add-button", component_property='n_clicks'),
+    State(component_id='graph-container', component_property='children')
+)
+def add_graph(n_clicks, children):
+    if n_clicks is None:
+        raise PreventUpdate
+    new_graph = html.Div(id={'type':'graph-frame', 'index': n_clicks},
+        children=[
+        dcc.Graph(id={'type':'graph', 'index': n_clicks}, figure={}),
+        dcc.Dropdown(id={'type':'parameter-selector', 'index': n_clicks}, options=parameters_dict,
+                     value=parameters_dict[0]['value'], style={'width':"75%", 'display': 'inline-block'}),
+        html.Button('-', id={'type': 'remove-button', 'index': n_clicks}, n_clicks=None,
+                    style={'width':"25%", 'display': 'inline-block'})
+    ], style={'width':"50%", 'display': 'inline-block'})
+    children.append(new_graph)
+    return children
+
+@app.callback(
+    Output(component_id={'type':'graph-frame', 'index': MATCH}, component_property='children'),
+    Input(component_id={'type': 'remove-button', 'index': MATCH}, component_property='n_clicks')
+)
+def remove_graph(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+
+    return []
+
 
 @app.callback(
     Output(component_id={'type': 'graph', 'index': MATCH}, component_property='figure'),
-    Input(component_id="update_butt", component_property='n_clicks'),
-    State(component_id={'type': 'dropdown-data', 'index': MATCH}, component_property='value'),
+    Input(component_id={'type': 'parameter-selector', 'index': MATCH}, component_property='value'),
     State(component_id='data-holder-slice', component_property='data'))
-def display(n_clicks, parameter, data):
-    if n_clicks is None:
-        raise PreventUpdate
+def display(parameter, data):
+    """
+    Charts
+    """
     if data is None:
         raise PreventUpdate
 
@@ -154,6 +217,9 @@ def display(n_clicks, parameter, data):
     State(component_id="date_selector", component_property='value')
 )
 def display_map(parameter, method, size, data, display_path, date):
+    """
+    Map setup
+    """
     if date is None:
         raise PreventUpdate
     elif size < 1:
@@ -169,7 +235,6 @@ def display_map(parameter, method, size, data, display_path, date):
     elif method == 'Heatmap':
         map = px.density_mapbox(data_frame=data, lat='Latitude', lon='Longitude', z=parameter, radius=size,
                                 color_continuous_scale='sunsetdark')
-        print(display_path)
     if display_path is not None:
         if display_path == [0]:
             path = go.Scattermapbox(mode='lines', lon=data['Longitude'].to_list(), lat=data['Latitude'].to_list(),
@@ -184,6 +249,8 @@ def display_map(parameter, method, size, data, display_path, date):
     map.update_coloraxes(colorbar={'x': 1, 'y': 0.5, 'xanchor': 'right', 'yanchor': 'middle', 'len': 1})
 
     return map
+
+
 
 
 if __name__ == '__main__':

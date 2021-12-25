@@ -12,9 +12,8 @@ class Dataset:
         self.clean_dir = 'Data\\Clean\\'
         self.raw_files = list_files(self.raw_dir)
         self.raw_files.sort()
-        self.dates = list(set([entry[0:8] for entry in self.raw_files]))
-        self.dates.sort()
         self.clean_files = list_files(self.clean_dir)
+        self.clean_files.sort()
         with open('Data\\header.txt', 'r') as file:
             self.header = file.read().split(', ')
 
@@ -23,6 +22,8 @@ class Dataset:
         Converts list of dates to dictionary in format {DD.MM.YYYY: YYYYMMDD}
         :return: dictionary of dates
         """
+        self.dates = list(set([entry[0:8] for entry in self.clean_files]))
+        self.dates.sort()
         string = []
         for i in self.dates:
             string.append('{}.{}.{}'.format(i[-2::], i[4:6], i[0:4]))
@@ -60,7 +61,7 @@ class Dataset:
         pm_corrected = raw_pm/factor
         return pd.Series(pm_corrected)
 
-    def clean_raw(self, date: int = None, save: bool = True):
+    def clean_raw(self, date: str = None, save: bool = True):
         """
         Czyści surowe dane i zapisuje je w ładnym DataFrame z nagłówkami w folderze Data\Clean
         :param date: Data, której plik chcemy wyczyścić
@@ -71,7 +72,7 @@ class Dataset:
             file = self.dates
         else:
             try:
-                file = ['{}_3'.format(date)]
+                file = ['{}'.format(date)]
             except:
                 print("Brak danych dla podanej daty")
                 exit()
@@ -88,7 +89,7 @@ class Dataset:
                 second_index = raw_data.index[~nans]
                 entry_index = raw_data.index[nans]
 
-                #raw_data.iloc[entry_index] = raw_data.iloc[entry_index].shift(axis=1)
+                #raw_data.iloc[entry_index] = raw_data.iloc[entry_index].shift(axis=1)  # use only with old version of logs
 
                 for i in second_index:
                     raw_data.iloc[i, 1] = datetime.strptime("{} {}".format(day, raw_data.iloc[i, 1]),
@@ -115,34 +116,60 @@ class Dataset:
                                                                        day_log.loc[second_index2, 'RH'], 'Pm2.5')
             day_log.loc[second_index2, 'Pm10'] = self.pm_correction(day_log.loc[second_index2, 'Pm10'],
                                                                       day_log.loc[second_index2, 'RH'], 'Pm10')
-
-            # Getting location to acceleration only entries
-            print(day_log.columns.to_list())
-            print(second_index2)
-            # latitudes = day_log.loc[second_index2, 'Latitude']
-            # longitudes = day_log.loc[second_index2, 'Longitude']
-            # d_lat, d_lon, d_step = [], [], []
-
-            # for i in range(len(second_index2)-1):
-            #     d_lat.append(latitudes.iloc[i+1]-latitudes.iloc[i])
-            #     d_lon.append(longitudes.iloc[i+1]-longitudes.iloc[i])
-            #     d_step.append(second_index2.values[i+1]-second_index2.values[i]-1)
-            #
-            # indexer = 0
-            # for i in range(day_log.shape[0]-1):
-            #     if i in second_index2.values:
-            #         lat_step = d_lat[indexer] / d_step[indexer]
-            #         lon_step = d_lon[indexer] / d_step[indexer]
-            #         indexer += 1
-            #         lat_0 = day_log.loc[i, 'Latitude']
-            #         lon_0 = day_log.loc[i, 'Longitude']
-            #         continue
-            #
-            #     day_log.loc[i, 'Latitude'] = lat_0 + lat_step * i
-            #     day_log.loc[i, 'Longitude'] = lon_0 + lon_step * i
+            day_log.loc[pd.isna(day_log['index']), 'index'] = False
+            #accels = day_log.loc[:, ['index', 'Time', 'Latitude', 'Longitude', 'aX', 'aY', 'aZ']]
+            d_accel = self.displacement(day_log)
 
             if save:
                 day_log.to_csv('{}{}.txt'.format(self.clean_dir, j), sep=';', index=False)
+
+    def displacement(self, data):
+        """
+        Calculates relative changes in accelerations and appends new columns to existing DataFrame with data
+        :param data: DataFrame to process
+        :return: None
+        """
+
+        for i in range(data.shape[0]-1):
+            data.loc[i + 1, 'd_aX'] = data.loc[i + 1, 'aX'] - data.loc[i, 'aX']
+            data.loc[i + 1, 'd_aY'] = data.loc[i + 1, 'aY'] - data.loc[i, 'aY']
+            data.loc[i + 1, 'd_aZ'] = data.loc[i + 1, 'aZ'] - data.loc[i, 'aZ']
+
+        data.loc[0, ['d_aX', 'd_aY', 'd_aZ']] = 0
+
+    def acceleration_positioning(self, date, save=True):
+        """
+        Calculates position for accelerometer entries in log
+        :param date: date of data to process
+        :param save: if True saves file
+        :return: None
+        """
+        data_main = self.read(date, selection='main')
+        data_accel = self.read(date, selection='accel')
+        main_index = list(data_main.index.values)
+
+        k = 0
+        for i in range(data_accel.shape[0]):
+            if data_accel.loc[i, 'index']:
+                if k == len(main_index) - 1:
+                    break
+
+                lat_0 = data_main.loc[main_index[k], 'Latitude']
+                lon_0 = data_main.loc[main_index[k], 'Longitude']
+
+                lat_next = data_main.loc[main_index[k + 1], 'Latitude']
+                lon_next = data_main.loc[main_index[k + 1], 'Longitude']
+
+                interval = main_index[k + 1] - main_index[k]
+                lat_step = (lat_next - lat_0) / interval
+                lon_step = (lon_next - lon_0) / interval
+                k += 1
+            else:
+                data_accel.loc[i, 'Latitude'] = data_accel.loc[i - 1, 'Latitude'] + lat_step
+                data_accel.loc[i, 'Longitude'] = data_accel.loc[i - 1, 'Longitude'] + lon_step
+
+        if save:
+            data_accel.to_csv('{}{}_accel.txt'.format(self.clean_dir, date), sep=';', index=False)
 
     def read_all(self, date):
         """
@@ -151,6 +178,7 @@ class Dataset:
         :return:
         """
         data = pd.read_csv('{}\\{}.txt'.format(self.clean_dir, date), sep=';').drop(columns=['level_0'])
+        data['Time'] = pd.to_datetime(data.loc[:, 'Time'], format='%Y-%m-%d %H:%M:%S')
         return data
 
     def read(self, date, selection='main', start_time=None, end_time=None):
@@ -168,33 +196,24 @@ class Dataset:
             start_time = data['Time'][0]
         else:
             start_time = "{}-{}-{} {}".format(date[0:4], date[4:6], date[6:], start_time)
-        start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+            start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+
         delta = 0
         if end_time is None:
             delta = 1
             end_time = data.iloc[-1, 1]
-            if '.' in end_time:
-                end_time = end_time[0:-7]
+
         else:
             end_time = "{}-{}-{} {}".format(date[0:4], date[4:6], date[6:], end_time)
-        end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S') + timedelta(seconds=delta)
-
-        nans = pd.isna(data['index'])
-        second_index = data.index[~nans]
+            end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S') + timedelta(seconds=delta)
 
         if selection == 'main':
-            data = data.iloc[second_index]
-            for i in range(data.shape[0]):
-                data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S')
-        elif selection == 'accel':
-            data = data.loc[:, ['index', 'Time', 'aX', 'aY', 'aZ']]
-            for i in range(data.shape[0]):
-                try:
-                    data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S')
-                except:
-                    data.iloc[i, 1] = datetime.strptime(data.iloc[i, 1], '%Y-%m-%d %H:%M:%S.%f')
+            data = data[data['index']]
 
-        data = data[(data["Time"] > start_time) & (data["Time"] < end_time)]
+        elif selection == 'accel':
+            data = data.loc[:, ['index', 'Time', 'Latitude', 'Longitude', 'aX', 'aY', 'aZ', 'd_aX', 'd_aY', 'd_aZ']]
+
+        data = data[(data["Time"] >= start_time) & (data["Time"] <= end_time)]
         return data
 
     def outliner(self, data, scale):
@@ -214,7 +233,6 @@ class Dataset:
         data = data[(data > low_treshold) & (data < high_treshold)]
 
         return data
-
 
     def visualize(self, date,  parameters=None, start=0, stop=None):  # In progress
         import matplotlib.ticker as ticker
