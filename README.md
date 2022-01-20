@@ -1,5 +1,5 @@
 # S-WRO
-Projekt SKN Gedetów
+Projekt SKN Geodetów
 ----
 
 Struktura:
